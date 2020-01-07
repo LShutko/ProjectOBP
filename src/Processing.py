@@ -14,14 +14,17 @@ class Processing(object):
     def process_image(self, image_path):
         image = cv2.imread(image_path)
         if image is not None:
-            image = cv2.resize(image, self.image_size)
-            array = img_to_array(image) / 225.0
+            image_resized = cv2.resize(image, self.image_size)
+            array = img_to_array(image_resized) / 225.0
         else:
             array = np.array([])
         return array
 
-    def transform_labels(self, label_list):
-        LB = LabelBinarizer()
-        image_labels = LB().fit_transform(label_list)
-        pickle.dump(LB, open(self.settings['output_directory']+'label_transform.pkl', 'wb'))
-        return image_labels
+    def transform(self, image_list, label_list):
+
+        labelbinarizer = LabelBinarizer()
+        image_labels = labelbinarizer.fit_transform(label_list)
+
+        pickle.dump(labelbinarizer, open(self.settings['output_directory']+'label_transform.pkl', 'wb'))
+
+        return np.asarray(image_list), image_labels
