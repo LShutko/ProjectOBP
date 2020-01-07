@@ -1,0 +1,17 @@
+# general settings
+input_directory: 'input/'
+output_directory: 'output/'
+
+# image settings
+width: 32
+height: 32
+depth: 3
+
+# training settings
+epochs: 200
+learing_rate: 1e-3
+batch_size: 16
+
+
+
+# GUI settings
