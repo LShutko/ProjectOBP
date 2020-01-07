@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pickle
 
 from keras.models import Sequential
 from keras.layers.normalization import BatchNormalization
@@ -27,6 +28,9 @@ class Model(object):
 
         # Create training history visualization
         self.export_plots(history)
+
+        # Create export of model
+        pickle.dump(trained_cnn, open(self.settings['output_directory']+'cnn_model.pkl', 'wb'))
 
         return
 

@@ -2,7 +2,7 @@
 input_directory: 'input/'
 output_directory: 'output/'
 
-seed: 1996
+seed: 1991
 
 # image settings
 width: 32
@@ -11,11 +11,10 @@ depth: 3
 
 # training settings
 epochs: 10
-learning_rate: 0.001
-batch_size: 256
+learning_rate: 0.005
+batch_size: 512
 validation_size: 0.3
 verbose: 1
-
 
 
 # GUI settings
