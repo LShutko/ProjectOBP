@@ -123,7 +123,7 @@ class Model(object):
         plt.ylabel('Accuracy')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig('output/fig1.png')
+        plt.savefig(self.settings['output_directory']+'fig1.png')
         plt.clf()
 
         # Plot training & validation loss values
@@ -133,7 +133,7 @@ class Model(object):
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig('output/fig2.png')
+        plt.savefig(self.settings['output_directory']+'fig2.png')
         plt.close()
 
         return
