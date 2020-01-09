@@ -12,6 +12,9 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler
 from torchvision import transforms
 from torchvision.utils import make_grid
+from torchvision import datasets, transforms, models
+
+
 
 class Reader(object):
 
@@ -43,9 +46,10 @@ class Reader(object):
         transform = transforms.Compose([
             transforms.Resize(32),
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
 
-        train_set = Dataset.ImageFolder(root=self.settings['input_directory'], train=True, transform=transform)
+        train_set = datasets.ImageFolder(root=self.settings['input_directory'], transform=transform)
         train_loader = torch.utils.data.DataLoader(train_set, batch_size=self.settings['batch_size'], shuffle=True, num_workers=1)
 
         # Training samples.
