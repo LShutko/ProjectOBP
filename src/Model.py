@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import pickle
 
 from keras.models import Sequential, load_model
 from keras.layers.normalization import BatchNormalization

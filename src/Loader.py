@@ -1,5 +1,6 @@
 import os
 import numpy as np
+
 from src.Processing import Processing
 
 import torch
@@ -24,7 +25,7 @@ class Loader(object):
     def load_test_data(self, path):
         image_list = []
 
-        return images
+        return
 
 
     def load_train_data(self):

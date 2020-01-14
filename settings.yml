@@ -1,6 +1,6 @@
 # general settings
-input_directory: 'input/'
-output_directory: 'output/'
+input_directory: "input/"
+output_directory: "output/"
 
 seed: 1991
 
@@ -19,4 +19,5 @@ verbose: 1
 
 # GUI settings
 model_path: "models/model.h5"
+plots_path: "plots/"
 
