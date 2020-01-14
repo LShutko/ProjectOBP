@@ -19,11 +19,13 @@ class Processing(object):
             image_resized = np.array([])
         return image_resized
 
-    def transform(self, image_list, label_list):
+    @staticmethod
+    def transform(image_list, label_list):
 
-        labelbinarizer = LabelBinarizer()
-        image_labels = labelbinarizer.fit_transform(label_list)
-
-        pickle.dump(labelbinarizer, open(self.settings['output_directory']+'label_transform.pkl', 'wb'))
+        if label_list:
+            labelbinarizer = LabelBinarizer()
+            image_labels = labelbinarizer.fit_transform(label_list)
+        else:
+            image_labels = None
 
         return np.asarray(image_list), image_labels

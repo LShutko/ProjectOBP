@@ -19,13 +19,18 @@ from torchvision import datasets, transforms, models
 class Loader(object):
 
     def __init__(self, settings):
+        self.process = Processing(settings)
         self.settings = settings
         self.n = 0
 
     def load_test_data(self, path):
         image_list = []
+        print(' ')
+        for image in os.listdir(path):
+            image_list.append(self.process.process_image(path+'/'+image))
+        print(f"loaded {len(image_list)} images")
 
-        return
+        return self.process.transform(image_list, None)[0]
 
 
     def load_train_data(self):

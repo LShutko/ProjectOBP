@@ -20,23 +20,28 @@ if __name__ == '__main__':
 
     # Start up interface
     gui = Interface(SETTINGS)
-    layout = gui.define_layout()
-    gui.create_window(layout)
 
     # Event loop. Read buttons, make callbacks
     while True:
         # Read the Window
         event, value = gui.window.read()
+
         if event in ('Quit', None):
             break
         # Lookup event in function dictionary
-        if event in gui.dispatch_dictionary:
-            func_to_call = gui.dispatch_dictionary[event]  # get function from dispatch dictionary
-            func_to_call()
-        elif event == "Load the training set data":
-            tkfig = gui.LoadTraining()
-        elif event in gui.graph_refresh:
-            gui.RefreshPlots(tkfig)
+        elif event in gui.dispatch_dictionary:
+            if event == 'Load data':
+                func_to_call = gui.dispatch_dictionary[event]  # get function from dispatch dictionary
+                input_directory = func_to_call()
+                image_list = reader.load_test_data(input_directory)
+
+                y_probabilities = predictor.predict_batch(nn, image_list)
+                y_predictions = y_probabilities.argmax(axis=1)
+                #TODO: Continue here...
+
+            else:
+                gui.dispatch_dictionary[event]
+                func_to_call()
         else:
             print('Event {} not in dispatch dictionary'.format(event))
     gui.window.read()
