@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pickle
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import Conv2D, AveragePooling2D, MaxPooling2D
 from keras.layers.core import Activation, Flatten, Dense
@@ -10,9 +10,15 @@ from keras.optimizers import Adam
 
 class Model(object):
 
-    def __init__(self, settings, n_classes):
+    def __init__(self, settings):
         self.settings = settings
-        self.n_classes = n_classes
+
+    def predict_batch(self, cnn, x):
+        return cnn.predict_on_batch(x)
+
+    def load(self):
+        print('Model is loaded in')
+        return load_model(self.settings['model_path'])
 
     def run(self, images, labels):
         x, y = images, labels
@@ -23,19 +29,18 @@ class Model(object):
         # Write cnn structure to table
         self.write_model(cnn)
 
-        # Train the CNN!
+        # Train the CNN
         trained_cnn, history = self.train_nn(cnn, x, y)
 
         # Create training history visualization
         self.export_plots(history)
 
         # Create export of model
-        pickle.dump(trained_cnn, open(self.settings['output_directory']+'cnn_model.pkl', 'wb'))
+        cnn.save(self.settings['model_path'])
 
         return
 
     def train_nn(self, model, x, y):
-
         # Define the loss function
         model.compile(loss="binary_crossentropy",
                       optimizer=Adam(lr=self.settings['learning_rate'],
@@ -101,13 +106,12 @@ class Model(object):
 
         model.add(Flatten())
 
-        model.add(Dense(self.n_classes))
+        model.add(Dense(15))
         model.add(Activation("softmax"))
 
         return model
 
     def write_model(self, model):
-
         with open(self.settings['output_directory'] + 'report.txt', 'w') as fh:
             # Pass the file handle in as a lambda function to make it callable
             model.summary(print_fn=lambda x: fh.write(x + '\n'))
@@ -115,7 +119,6 @@ class Model(object):
         return
 
     def export_plots(self, history):
-
         # Plot training & validation accuracy values
         plt.plot(history.history['acc'])
         plt.plot(history.history['val_acc'])
@@ -123,7 +126,7 @@ class Model(object):
         plt.ylabel('Accuracy')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig(self.settings['output_directory']+'fig1.png')
+        plt.savefig(self.settings['output_directory'] + 'fig1.png')
         plt.clf()
 
         # Plot training & validation loss values
@@ -133,7 +136,7 @@ class Model(object):
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig(self.settings['output_directory']+'fig2.png')
+        plt.savefig(self.settings['output_directory'] + 'fig2.png')
         plt.close()
 
         return
