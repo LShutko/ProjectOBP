@@ -1,7 +1,4 @@
 import yaml
-
-from src.Loader import Loader
-from src.Model import Model
 from src.GUI import Interface
 
 if __name__ == '__main__':
@@ -11,6 +8,14 @@ if __name__ == '__main__':
     with open('settings.yml', 'r') as f:
         SETTINGS = yaml.load(f, Loader=yaml.FullLoader)
 
+    # Start up interface
+    gui = Interface(SETTINGS)
+    gui.startup_window()
+
+    # After pressing start in startup_window load in whole program
+    from src.Loader import Loader
+    from src.Model import Model
+
     # Initialize reader loading new images
     reader = Loader(SETTINGS)
 
@@ -18,14 +23,14 @@ if __name__ == '__main__':
     predictor = Model(SETTINGS)
     nn = predictor.load()
 
-    # Start up interface
-    gui = Interface(SETTINGS)
+    gui.startup_window.close()
+    gui.window()
 
     # Event loop. Read buttons, make callbacks
     while True:
         # Read the Window
         event, value = gui.window.read()
-
+        print(' ')
         if event in ('Quit', None):
             break
         # Lookup event in function dictionary
@@ -38,10 +43,9 @@ if __name__ == '__main__':
                 y_probabilities = predictor.predict_batch(nn, image_list)
                 y_predictions = y_probabilities.argmax(axis=1)
                 #TODO: Continue here...
-
-            else:
-                gui.dispatch_dictionary[event]
-                func_to_call()
+        elif event in gui.graph_refresh:
+            func_to_call = gui.graph_refresh[event]
+            func_to_call()
         else:
             print('Event {} not in dispatch dictionary'.format(event))
     gui.window.read()
