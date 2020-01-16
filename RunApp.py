@@ -35,7 +35,8 @@ if __name__ == '__main__':
             break
         # Lookup event in function dictionary
         elif event in gui.dispatch_dictionary:
-            if event == 'Load data':
+            if event == 'Browse':
+                print(' ')
                 func_to_call = gui.dispatch_dictionary[event]  # get function from dispatch dictionary
                 input_directory = func_to_call()
                 image_list = reader.load_test_data(input_directory)
