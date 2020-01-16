@@ -42,11 +42,17 @@ if __name__ == '__main__':
 
                 y_probabilities = predictor.predict_batch(nn, image_list)
                 y_predictions = y_probabilities.argmax(axis=1)
-                #TODO: Continue here...
+
+
         elif event in gui.graph_refresh:
+            print('')
+            if event in ['all', 'Tomato', 'Potato', 'Pepperbell']:
+                gui.plant = event
+            else:
+                gui.chart_type = event
             func_to_call = gui.graph_refresh[event]
             func_to_call()
         else:
             print('Event {} not in dispatch dictionary'.format(event))
-    gui.window.read()
+
 

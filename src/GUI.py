@@ -1,6 +1,4 @@
 import PySimpleGUI as sg
-import sys
-import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -14,16 +12,17 @@ class Interface(object):
         sg.ChangeLookAndFeel('Material2')
         self.chart_type = 'pie'
         self.plant = 'all'
+        self.image_element = sg.Image(r'plots\pie_all.png', key='canvas')
         self.graph_refresh = {
-            'Tomato': self.update_plots(self.chart_type, 'Tomato'),
-            'Potato': self.update_plots(self.chart_type, 'Potato'),
-            'Pepperbell': self.update_plots(self.chart_type, 'Pepperbell'),
-            'all': self.update_plots(self.chart_type, 'all'),
-            'pie_chart': self.update_plots('pie', self.plant),
-            'bar_chart': self.update_plots('bar', self.plant)
+            'Tomato': self.update_plots,
+            'Potato': self.update_plots,
+            'Pepperbell': self.update_plots,
+            'all': self.update_plots,
+            'pie': self.update_plots,
+            'bar': self.update_plots
         }
         self.dispatch_dictionary = {
-            'Load data': self.load,
+            'Browse': self.load,
             'Source code': self.source_code,
             'User manual': self.user_manual,
             'Export': self.export
@@ -46,16 +45,15 @@ class Interface(object):
                                 grab_anywhere=False)
         return
 
-    def update_plots(self, chart_type, plant):
-        return
+    def update_plots(self):
+        return self.image_element.update('plots/'+self.chart_type+'_'+self.plant+'.png')
 
-    @staticmethod
-    def define_layout(mode):
+    def define_layout(self, mode):
         if mode == 'home':
 
             home_tab_layout = [
                 [sg.Text('Bacterial Spot Detection', size=(50, 2), justification='center', relief=sg.RELIEF_RIDGE)],
-                [sg.Text('_' * 100, size=(100, 1), justification='center')],
+                [sg.Text('_'*100, size=(100, 1), justification='center')],
                 [sg.Text('Group 1: Tim, Paulo, Lena, Olga, Stephan', size=(20, 2), justification='center',
                          font=("Helvetica", 12))],
                 [sg.Text('v1.0\tJanuary, 2020', size=(100, 5), justification='center', font=("Helvetica", 10))]
@@ -73,17 +71,19 @@ class Interface(object):
                 ]),
                  sg.Frame(" 2. Chart Type ", [
                      [sg.Radio('Pie Chart', group_id='chart_type', default=True, size=(10, 2), enable_events=True,
-                               key='pie_chart')],
+                               key='pie')],
                      [sg.Radio('Bar Chart', group_id='chart_type', default=False, size=(10, 2), enable_events=True,
-                               key='bar_chart')]
+                               key='bar')]
                  ]),
-                 sg.Canvas(size=(100, 100), key='canvas')
+                 self.image_element
                  ]
             ]
 
             model_tab_layout = [
-                [sg.Text('Your folder', size=(23, 1), auto_size_text=False, justification='right'),
-                 sg.Button('Load data', size=(30, 1))]
+                [sg.Text(' ')],
+                [sg.Text('Select Your Folder', size=(25, 1), auto_size_text=False, justification='left')],
+                [sg.Button('Browse', size=(20, 1))],
+                [sg.Text('_'*140)]
             ]
 
             layout = [
@@ -96,11 +96,12 @@ class Interface(object):
 
         elif mode == 'startup':
             startup_layout = [
-                [sg.Text('Welcome to the Bacterial Spot Detection', size=(20, 2), justification='center',
-                         relief=sg.RELIEF_RIDGE)],
+                [sg.Text(' ')],
+                [sg.Text('Bacterial Spot Detector', size=(22, 2), justification='center', font=("Helvetica", 14))],
                 [sg.Image(r'plots\leaf.png')],
-                [sg.Button('Press Here To Start')],
-                [sg.Text('Note: loading may take a few seconds.')]
+                [sg.Text(' ')],
+                [sg.Button('Press Here To Start', size=(32, 2))],
+                [sg.Text('Note: loading may take a few seconds.', size=(32, 2), justification='center')]
             ]
             return startup_layout
 
