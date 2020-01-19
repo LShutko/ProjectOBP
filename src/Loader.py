@@ -24,13 +24,16 @@ class Loader(object):
         self.n = 0
 
     def load_test_data(self, path):
+
         image_list = []
+        image_file_list = []    # filenames list for image browser
         print(' ')
         for image in os.listdir(path):
             image_list.append(self.process.process_image(path+'/'+image))
+            image_file_list.append(image)
         print(f"loaded {len(image_list)} images")
 
-        return self.process.transform(image_list, None)[0]
+        return self.process.transform(image_list, None)[0], image_file_list
 
 
     def load_train_data(self):
@@ -79,4 +82,3 @@ class Loader(object):
         data_lengths = {"train": len(train_idx), "val": len(valid_idx)}
 
         return train_loader, validation_loader, data_loaders, data_lengths
-

@@ -1,4 +1,6 @@
 import PySimpleGUI as sg
+from PIL import Image, ImageTk
+import io
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -13,6 +15,14 @@ class Interface(object):
         self.chart_type = 'pie'
         self.plant = 'all'
         self.image_element = sg.Image(r'plots\pie_all.png', key='canvas')
+        self.image_element_pred = sg.Image(r'plots\fantom.png',  key='canvas_pred')
+        self.slider = sg.Slider((1, 1), key='Slider', orientation='h', enable_events=True, disable_number_display=True)
+        self.file_num_left = sg.Text('0')
+        self.file_num_right = sg.Text('0', size=(15,1))
+        self.file_number = sg.Text('0', size=(15,1))
+        self.image_file_name = sg.Text('', size=(80,1))
+        self.image_number = sg.Text('', size=(1,1))
+        self.image_predic_class = sg.Text('', size=(80,1))
         self.graph_refresh = {
             'Tomato': self.update_plots,
             'Potato': self.update_plots,
@@ -25,7 +35,8 @@ class Interface(object):
             'Browse': self.load,
             'Source code': self.source_code,
             'User manual': self.user_manual,
-            'Export': self.export
+            'Export': self.export,
+            'Slider': self.change_image #no such function, see the event callback code in "RunApp.py"
         }
         self.settings = settings
         self.input_directory = ""
@@ -45,8 +56,48 @@ class Interface(object):
                                 grab_anywhere=False)
         return
 
+    def get_img_data(self, f, maxsize=(256, 256)):  # PIL function to read one file and convert to PNG
+        img = Image.open(f)
+        img.thumbnail(maxsize)
+        bio = io.BytesIO()
+        img.save(bio, format="PNG")
+        del img
+        return bio.getvalue()
+
     def update_plots(self):
         return self.image_element.update('plots/'+self.chart_type+'_'+self.plant+'.png')
+
+    def update_test_image(self, image):
+        return self.image_element_pred.update(data=image)
+
+    def update_model_controls(self, image_set_size, fname, pred_class):
+        self.slider.Update(range=(1,image_set_size))
+        self.file_num_left.update("1")
+        self.file_num_right.set_size(size=(len(str(image_set_size)),1))
+        self.file_num_right.update(value=str(image_set_size))
+
+        self.file_number.set_size(size=(len(str(image_set_size)), 1))
+        self.file_number.update(value=str(image_set_size))
+
+        self.image_file_name.set_size(size=(len(fname), 1))
+        self.image_file_name.update(value=fname)
+
+        self.image_predic_class.update(value=str(pred_class))
+
+
+
+    def refresh_image_info(self, number, fname, pred_class):
+        self.image_file_name.set_size(size=(len(fname),1))
+        self.image_file_name.update(value=fname)
+
+        self.image_number.set_size(size=(len(str(number)), 1))
+        self.image_number.update(value=str(number))
+
+        self.image_predic_class.update(value=str(pred_class))
+
+
+    def change_image(self):
+        a=1
 
     def define_layout(self, mode):
         if mode == 'home':
@@ -78,12 +129,18 @@ class Interface(object):
                  self.image_element
                  ]
             ]
-
+            model_col_image = [[self.image_element_pred]]
+            model_col_image_file = [[sg.Text("File name: "), self.image_file_name],[sg.Text("File number "),
+                                 self.image_number, sg.Text("of "), self.file_number],
+                                    [sg.Text("Predicted class: "), self.image_predic_class]]
             model_tab_layout = [
                 [sg.Text(' ')],
                 [sg.Text('Select Your Folder', size=(25, 1), auto_size_text=False, justification='left')],
                 [sg.Button('Browse', size=(20, 1))],
-                [sg.Text('_'*140)]
+                [sg.Text('_'*140)],
+                [sg.Text('Leaf Demonstration'), sg.Text('', key='_OUTPUT_')],
+                [self.file_num_left, self.slider, self.file_num_right],
+                [sg.Column(model_col_image), sg.Column(model_col_image_file)]
             ]
 
             layout = [
@@ -112,6 +169,8 @@ class Interface(object):
             raise SystemExit("Cancelling: no filename supplied")
         else:
             return self.input_directory
+
+
 
     # Matplotlib helper code for embedded canvas
     @staticmethod
