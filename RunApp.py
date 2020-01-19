@@ -39,10 +39,24 @@ if __name__ == '__main__':
                 print(' ')
                 func_to_call = gui.dispatch_dictionary[event]  # get function from dispatch dictionary
                 input_directory = func_to_call()
-                image_list = reader.load_test_data(input_directory)
 
+                image_list, image_file_list  = reader.load_test_data(input_directory)
                 y_probabilities = predictor.predict_batch(nn, image_list)
                 y_predictions = y_probabilities.argmax(axis=1)
+
+                path = input_directory+"/"+image_file_list[0]
+                gui.update_test_image(gui.get_img_data(path))
+                gui.update_model_controls(len(image_file_list), image_file_list[0], y_predictions[0] )
+
+
+
+            if event == 'Slider':
+                img = int(value['Slider'])
+                print(img)
+                path = input_directory + "/" + image_file_list[img-1]
+                gui.update_test_image(gui.get_img_data(path))
+                gui.refresh_image_info(img, image_file_list[img-1], y_predictions[img-1])
+
 
 
         elif event in gui.graph_refresh:
@@ -55,5 +69,3 @@ if __name__ == '__main__':
             func_to_call()
         else:
             print('Event {} not in dispatch dictionary'.format(event))
-
-
