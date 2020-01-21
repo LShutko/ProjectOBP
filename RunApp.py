@@ -22,6 +22,7 @@ if __name__ == '__main__':
     # Define model and load in weights
     predictor = Model(SETTINGS)
     nn = predictor.load()
+    test_data_loaded = False
 
     gui.startup_window.close()
     gui.window()
@@ -33,6 +34,7 @@ if __name__ == '__main__':
         print(' ')
         if event in ('Quit', None):
             break
+
         # Lookup event in function dictionary
         elif event in gui.dispatch_dictionary:
             if event == 'Browse':
@@ -43,20 +45,43 @@ if __name__ == '__main__':
                 image_list, image_file_list  = reader.load_test_data(input_directory)
                 y_probabilities = predictor.predict_batch(nn, image_list)
                 y_predictions = y_probabilities.argmax(axis=1)
+                m = [0]*15
+                for i in y_predictions:
+                    m[i]+=1
+                for i in range (0, len(m)):
+                    m[i] = round(100*m[i]/len(y_predictions),2)
 
+                print(gui.init_dataset_statistics(m))
+                im_index = 0
+                test_data_loaded = True
                 path = input_directory+"/"+image_file_list[0]
-                gui.update_test_image(gui.get_img_data(path))
-                gui.update_model_controls(len(image_file_list), image_file_list[0], y_predictions[0] )
+                gui.init_model_controls(image_file_list)
+                gui.update_predict_display(input_directory,image_file_list[im_index],im_index,y_predictions[im_index])
 
-
-
+        elif ((event in gui.predic_browsing) and test_data_loaded):  #events on the Prediction tab
             if event == 'Slider':
-                img = int(value['Slider'])
-                print(img)
-                path = input_directory + "/" + image_file_list[img-1]
-                gui.update_test_image(gui.get_img_data(path))
-                gui.refresh_image_info(img, image_file_list[img-1], y_predictions[img-1])
+                im_index = int(value['Slider'])-1
+                gui.file_listbox.update(scroll_to_index=im_index)
+                print(im_index)
+            elif event == 'listbox':
+                fname = value['listbox'][0]
+                im_index = image_file_list.index(fname)
+                gui.slider.update(value=im_index + 1)
+            elif event in ('Prev', 'MouseWheel:Up', 'Up:38', 'Prior:33'):
+                im_index -=1
+                if im_index <0 :
+                    im_index = 0
+                gui.file_listbox.update(scroll_to_index=im_index)
+                gui.slider.update(value=im_index + 1)
+            elif event in ('Next', 'MouseWheel:Down', 'Down:40', 'Next:34'):
+                im_index +=1
+                if im_index >len(image_file_list)-1 :
+                    im_index = len(image_file_list)-1
+                gui.file_listbox.update(scroll_to_index=im_index)
+                gui.slider.update(value=im_index + 1)
 
+            func_to_call = gui.predic_browsing[event]  # get function from dispatch dictionary
+            func_to_call(input_directory, image_file_list[im_index], im_index, y_predictions[im_index])
 
 
         elif event in gui.graph_refresh:
