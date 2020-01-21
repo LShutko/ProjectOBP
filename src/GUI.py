@@ -14,15 +14,17 @@ class Interface(object):
         sg.ChangeLookAndFeel('Material2')
         self.chart_type = 'pie'
         self.plant = 'all'
-        self.image_element = sg.Image(r'plots\pie_all.png', key='canvas')
+        self.image_element = sg.Image(r'plots\pie_all.png', key='canvas', size=(640,480))
         self.image_element_pred = sg.Image(r'plots\fantom.png',  key='canvas_pred')
         self.slider = sg.Slider((1, 1), key='Slider', orientation='h', enable_events=True, disable_number_display=True)
         self.file_num_left = sg.Text('0')
         self.file_num_right = sg.Text('0', size=(15,1))
         self.file_number = sg.Text('0', size=(15,1))
-        self.image_file_name = sg.Text('', size=(80,1))
+        self.image_file_name = sg.Text('', size=(10,1))
         self.image_number = sg.Text('', size=(1,1))
-        self.image_predic_class = sg.Text('', size=(80,1))
+        self.image_predic_class = sg.Text('', size=(10,1))
+        self.file_listbox = sg.Listbox(values=[], enable_events=True, size=(40, 20), background_color='White', text_color='Black', key='listbox')
+        self.pred_stat_listbox = sg.Listbox(values=[], enable_events=False, size=(45, 15), background_color='White', text_color='Black')
         self.graph_refresh = {
             'Tomato': self.update_plots,
             'Potato': self.update_plots,
@@ -35,26 +37,56 @@ class Interface(object):
             'Browse': self.load,
             'Source code': self.source_code,
             'User manual': self.user_manual,
-            'Export': self.export,
-            'Slider': self.change_image #no such function, see the event callback code in "RunApp.py"
+            'Export': self.export
+             }
+        self.predic_browsing = {            # mouse scrolling/slider/arrow, PgUp-PgDn keys/list events at Prediction page
+            'Slider': self.update_predict_display,
+            'Down:40':self.update_predict_display,
+            'Next:34': self.update_predict_display,
+            'Up:38': self.update_predict_display,
+            'Prior:33': self.update_predict_display,
+            'Next': self.update_predict_display,
+            'Prev': self.update_predict_display,
+            'MouseWheel:Down': self.update_predict_display,
+            'MouseWheel:Up': self.update_predict_display,
+            'listbox': self.update_predict_display
         }
+
+        self.class_dictionary = {           #Model class labels
+            0: 'Pepperbell_bacterial_spot',
+            1: 'Pepperbell_healthy',
+            2: 'Potato_early_blight',
+            3: 'Potato_healthy',
+            4: 'Potato_late_blight',
+            5: 'Tomato_bacterial_spot',
+            6: 'Tomato_early_blight',
+            7: 'Tomato_healthy',
+            8: 'Tomato_late_blight',
+            9: 'Tomato_leaf_mold',
+            10: 'Tomato_septoria_leaf_spot',
+            11: 'Tomato_target_spot',
+            12: 'Tomato-mosaic_virus',
+            13: 'Tomato-spider_mites_2_spotted_spider_mite',
+            14: 'Tomato-yellow_leaf_curl_virus'
+        }
+
         self.settings = settings
         self.input_directory = ""
         self.startup_window = sg.Window('Starting up',
                                         self.define_layout('startup'),
                                         default_element_size=(30, 1),
                                         grab_anywhere=True)
-        self.window = sg.Window('Bacterial spot prediction',
-                                self.define_layout('home'),
-                                default_element_size=(30, 1),
-                                grab_anywhere=False)
 
-    def open_gui(self):
+
         self.window = sg.Window('Bacterial spot prediction',
-                                self.define_layout('home'),
-                                default_element_size=(30, 1),
-                                grab_anywhere=False)
-        return
+                                    self.define_layout('home'),
+                                    return_keyboard_events=True,
+                                    grab_anywhere=False,
+                                    location=(0, 0))
+
+
+
+
 
     def get_img_data(self, f, maxsize=(256, 256)):  # PIL function to read one file and convert to PNG
         img = Image.open(f)
@@ -65,49 +97,57 @@ class Interface(object):
         return bio.getvalue()
 
     def update_plots(self):
-        return self.image_element.update('plots/'+self.chart_type+'_'+self.plant+'.png')
+        img_path = 'plots/'+self.chart_type+'_'+self.plant+'.png'
+
+        return self.image_element.update(data=self.get_img_data(img_path,(640,480)))
 
     def update_test_image(self, image):
         return self.image_element_pred.update(data=image)
 
-    def update_model_controls(self, image_set_size, fname, pred_class):
-        self.slider.Update(range=(1,image_set_size))
-        self.file_num_left.update("1")
-        self.file_num_right.set_size(size=(len(str(image_set_size)),1))
-        self.file_num_right.update(value=str(image_set_size))
+    def update_predict_display(self, path_dir, fname, number, pred_class): # refresh image and file info for scrolling/slider/key/list events
 
-        self.file_number.set_size(size=(len(str(image_set_size)), 1))
-        self.file_number.update(value=str(image_set_size))
+        path = path_dir+"/"+fname
+        self.update_test_image(self.get_img_data(path))
 
         self.image_file_name.set_size(size=(len(fname), 1))
         self.image_file_name.update(value=fname)
 
-        self.image_predic_class.update(value=str(pred_class))
+        self.image_number.set_size(size=(len(str(number+1)), 1))
+        self.image_number.update(value=str(number+1))
+
+        self.image_predic_class.set_size(size=(len(self.class_dictionary[pred_class]), 1))
+        self.image_predic_class.update(value=self.class_dictionary[pred_class])
 
 
+    def init_model_controls(self, image_file_list):   # set up controls and image file info after test dataset upload
+        image_set_size = len(image_file_list)
+        self.file_listbox.update(values=image_file_list)
+        self.slider.Update(range=(1,image_set_size))
+        self.file_num_left.update("1")
+        self.file_num_right.set_size(size=(len(str(image_set_size)),1))
+        self.file_num_right.update(value=str(image_set_size))
+        self.file_number.set_size(size=(len(image_file_list), 1))
+        self.file_number.update(value=len(image_file_list))
 
-    def refresh_image_info(self, number, fname, pred_class):
-        self.image_file_name.set_size(size=(len(fname),1))
-        self.image_file_name.update(value=fname)
+    def init_dataset_statistics (self, data_stat):
+        classes_out = []
+        for i in range (0, len(data_stat)):
+            if data_stat[i] > 0:
+                classes_out.append(self.class_dictionary[i]+': '+str(data_stat[i])+"%")
 
-        self.image_number.set_size(size=(len(str(number)), 1))
-        self.image_number.update(value=str(number))
+                self.pred_stat_listbox.update(values=classes_out)
+        return classes_out
 
-        self.image_predic_class.update(value=str(pred_class))
-
-
-    def change_image(self):
-        a=1
 
     def define_layout(self, mode):
         if mode == 'home':
 
             home_tab_layout = [
                 [sg.Text('Bacterial Spot Detection', size=(50, 2), justification='center', relief=sg.RELIEF_RIDGE)],
-                [sg.Text('_'*100, size=(100, 1), justification='center')],
+                [sg.Text('_'*50, size=(50, 1), justification='center')],
                 [sg.Text('Group 1: Tim, Paulo, Lena, Olga, Stephan', size=(20, 2), justification='center',
                          font=("Helvetica", 12))],
-                [sg.Text('v1.0\tJanuary, 2020', size=(100, 5), justification='center', font=("Helvetica", 10))]
+                [sg.Text('v1.0\tJanuary, 2020', size=(50, 5), justification='center', font=("Helvetica", 10))]
             ]
 
             visual_tab_layout = [
@@ -130,17 +170,21 @@ class Interface(object):
                  ]
             ]
             model_col_image = [[self.image_element_pred]]
+            model_col_files = [[self.file_listbox ],
+                         [sg.Button('Next', size=(8, 2)), sg.Button('Prev', size=(8, 2))]]
             model_col_image_file = [[sg.Text("File name: "), self.image_file_name],[sg.Text("File number "),
                                  self.image_number, sg.Text("of "), self.file_number],
-                                    [sg.Text("Predicted class: "), self.image_predic_class]]
+                                    [sg.Text("Predicted class: "), self.image_predic_class],
+                                    [self.pred_stat_listbox]]
             model_tab_layout = [
                 [sg.Text(' ')],
                 [sg.Text('Select Your Folder', size=(25, 1), auto_size_text=False, justification='left')],
                 [sg.Button('Browse', size=(20, 1))],
-                [sg.Text('_'*140)],
+                [sg.Text('_'*50)],
                 [sg.Text('Leaf Demonstration'), sg.Text('', key='_OUTPUT_')],
                 [self.file_num_left, self.slider, self.file_num_right],
-                [sg.Column(model_col_image), sg.Column(model_col_image_file)]
+                [sg.Column(model_col_files ), sg.Column(model_col_image),  sg.Column(model_col_image_file)]
+                #, sg.Column(model_col_image_file)
             ]
 
             layout = [
