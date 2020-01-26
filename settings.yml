@@ -1,6 +1,9 @@
 # general settings
 input_directory: "input/"
 output_directory: "output/"
+manual_file: "manual.pdf"
+document_file: "documentation.pdf"
+github_code: "https://github.com/pfijen/ProjectOBP"
 
 seed: 1991
 
@@ -20,4 +23,3 @@ verbose: 1
 # GUI settings
 model_path: "models/model.h5"
 plots_path: "plots/"
-
