@@ -3,6 +3,7 @@ import numpy as np
 
 from src.Processing import Processing
 
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,6 +16,8 @@ from torchvision import transforms
 from torchvision.utils import make_grid
 from torchvision import datasets, transforms, models
 
+# PIL supported image types
+img_types = (".png", ".jpg", "jpeg", ".tiff", ".bmp")
 
 class Loader(object):
 
@@ -29,10 +32,13 @@ class Loader(object):
         image_file_list = []    # filenames list for image browser
         print(' ')
         for image in os.listdir(path):
-            image_list.append(self.process.process_image(path+'/'+image))
-            image_file_list.append(image)
+            if (os.path.isfile(os.path.join(path, image)) and os.path.getsize(os.path.join(path, image))>0 ) \
+                    and image.lower().endswith(img_types): # checking if file of non-zero length exists and belongs to the image type
+                image_list.append(self.process.process_image(path+'/'+image))
+                image_file_list.append(image)
+        if len(image_list) == 0:
+            return image_list, image_file_list
         print(f"loaded {len(image_list)} images")
-
         return self.process.transform(image_list, None)[0], image_file_list
 
 
