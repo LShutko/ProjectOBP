@@ -26,7 +26,8 @@ class Interface(object):
         self.image_number = sg.Text('', size=(1,1))
         self.image_predic_class = sg.Text('', size=(1,1))
         self.file_listbox = sg.Listbox(values=[], enable_events=True, size=(40, 20), background_color='White', text_color='Black', key='listbox')
-        self.pred_stat_listbox = sg.Listbox(values=[], enable_events=False, size=(45, 10), background_color='White', text_color='Black')
+        self.pred_stat_listbox = sg.Listbox(values=[], enable_events=False, size=(45, 10), background_color='White',
+                                            text_color='Black', select_mode = sg.LISTBOX_SELECT_MODE_MULTIPLE )
         self.graph_refresh = {
             'Tomato': self.update_plots,
             'Potato': self.update_plots,
@@ -40,7 +41,8 @@ class Interface(object):
             'Source code': self.source_code,
             'User Manual': self.user_manual,
             'Documentation': self.docum_manual,
-            'Save as': self.save_pred_details
+            'Save as': self.save_pred_details,
+            'Filter': self.filter_results
              }
         self.predic_browsing = {            # mouse scrolling/slider/arrow, PgUp-PgDn keys/list events at Prediction page
             'Slider': self.update_predict_display,
@@ -53,6 +55,7 @@ class Interface(object):
             'MouseWheel:Down': self.update_predict_display,
             'MouseWheel:Up': self.update_predict_display,
             'listbox': self.update_predict_display
+
         }
 
         self.class_dictionary = {           #Model class labels
@@ -109,6 +112,8 @@ class Interface(object):
     def update_test_image(self, image):
         return self.image_element_pred.update(data=image)
 
+
+
     def update_predict_display(self, path_dir, number, pred_class): # refresh image and file info for scrolling/slider/key/list events
 
         list_b = self.file_listbox.get_list_values()
@@ -124,6 +129,25 @@ class Interface(object):
 
         self.image_predic_class.set_size(size=(len(self.class_dictionary[pred_class]), 1))
         self.image_predic_class.update(value=self.class_dictionary[pred_class])
+
+    def filter_results(self, image_file_list, pred_class_list):
+        image_file_list_filter = []
+        y_predictions_filter = []
+        list_selected_classes = []
+        for i in self.pred_stat_listbox.get_indexes():
+            s = self.pred_stat_listbox.get_list_values()[i]
+            list_selected_classes.append(s.split(":")[0])
+
+        if len(list_selected_classes) ==0:
+            return image_file_list, pred_class_list
+
+        for i in range(len(image_file_list)):
+            for j in list_selected_classes:
+                if j == self.class_dictionary[pred_class_list[i]]:
+                    image_file_list_filter.append(image_file_list[i])
+                    y_predictions_filter.append(pred_class_list[i])
+        self.file_listbox.update(values=image_file_list_filter)
+        return image_file_list_filter, y_predictions_filter
 
     def reset_predict_display(self):
         self.update_test_image(self.get_img_data(r'plots\fantom.png'))
@@ -159,6 +183,7 @@ class Interface(object):
         for i in  classes_sorted:
            classes_out.append(i[0]+': '+str(i[1])+"%") #composing the string list
         self.pred_stat_listbox.update(values=classes_out)
+        self.pred_stat_listbox.update(set_to_index=None)
         return classes_out
 
 
@@ -190,7 +215,7 @@ class Interface(object):
                 [sg.Text('Stephan van der Kolff', size=(110, 5), justification='center',
                          font=("Helvetica", 12), relief=sg.RELIEF_RIDGE)],
                 [sg.Text(" "*73), sg.Button("User Manual", size=(15,1)), sg.Button("Documentation", size=(15,1)),
-                 sg.Button("Source code", size=(15,1)), sg.Text('v1.0\tJanuary, 2020', size=(37, 1), justification='right', font=("Helvetica", 10))]
+                 sg.Button("Source code", size=(15,1)), sg.Text('v3.6\tJanuary, 2020', size=(37, 1), justification='right', font=("Helvetica", 10))]
             ]
 
             visual_tab_layout = [
@@ -223,7 +248,8 @@ class Interface(object):
                                     [sg.Text(' ')],
                                     [sg.Text("Dataset prediction details", font=("Helvetica", 15, 'bold'), size=(25, 1), justification='left')],
                                     [self.pred_stat_listbox],
-                                    [sg.Button('Save as', size=(8, 2))]]
+                                    [sg.Button('Export details', size=(10, 2), key='Save as'),
+                                     sg.Button('Filter selection', size=(10, 2), key='Filter')]]
             model_tab_layout = [
                 [sg.Text(' ')],
                 [sg.Text('Select Your Folder', size=(25, 1), auto_size_text=False, justification='left')],
@@ -262,18 +288,40 @@ class Interface(object):
         else:
             return self.input_directory
 
-    def save_pred_details(self,path):
-        file_name = sg.popup_get_file('Save as',default_path='results.txt')
+    def save_pred_details(self,path, image_file_list, y_predictions):
+        file_name = sg.PopupGetFile('Enter Filename', save_as=True, default_path="results.txt",default_extension='txt')
         if not file_name:
             sg.popup("Please enter the file name")
         else:
             file = open(file_name, "w")
             file.write("Prediction details of the dataset "+path+'\n')
             file.write("Number of files: ")
-            file.write(str(len(self.file_listbox.get_list_values())) + '\n')
+            file.write(str(len(os.listdir(path))) + '\n')
 
             for line in self.pred_stat_listbox.GetListValues():
                 file.write(line + '\n')
+            class_sel =  self.pred_stat_listbox.get_indexes()
+
+            file.write("\n")
+            file.write("Selected classes: ")
+            if len(class_sel) > 0:
+                j=0
+                for i in class_sel:
+                    j+=1
+                    s = self.pred_stat_listbox.get_list_values()[i]
+                    file.write(s.split(":")[0])
+
+                    if j < len(class_sel):
+                        file.write(', ')
+
+            else:
+                file.write("all \n")
+            file.write("\n")
+            file.write("\n")
+            for i in range(len(image_file_list)):
+                file.write(image_file_list[i] + ": "+ self.class_dictionary[y_predictions[i]] )
+                file.write("\n")
+
             file.close()
 
 
