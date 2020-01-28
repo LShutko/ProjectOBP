@@ -25,6 +25,7 @@ class Interface(object):
         self.image_file_name = sg.Text('', size=(1,1))
         self.image_number = sg.Text('', size=(1,1))
         self.image_predic_class = sg.Text('', size=(1,1))
+        self.predict_certainty = sg.Text('', size=(1,1))
         self.file_listbox = sg.Listbox(values=[], enable_events=True, size=(40, 20), background_color='White', text_color='Black', key='listbox')
         self.pred_stat_listbox = sg.Listbox(values=[], enable_events=False, size=(45, 10), background_color='White',
                                             text_color='Black', select_mode = sg.LISTBOX_SELECT_MODE_MULTIPLE )
@@ -114,7 +115,7 @@ class Interface(object):
 
 
 
-    def update_predict_display(self, path_dir, number, pred_class): # refresh image and file info for scrolling/slider/key/list events
+    def update_predict_display(self, path_dir, number, pred_class, y_certainty): # refresh image and file info for scrolling/slider/key/list events
 
         list_b = self.file_listbox.get_list_values()
         fname = list_b[number]
@@ -130,9 +131,15 @@ class Interface(object):
         self.image_predic_class.set_size(size=(len(self.class_dictionary[pred_class]), 1))
         self.image_predic_class.update(value=self.class_dictionary[pred_class])
 
-    def filter_results(self, image_file_list, pred_class_list):
+        certain = str(round(y_certainty,3)) + "%"
+        self.predict_certainty.set_size(size=(len(certain), 1))
+        self.predict_certainty.update(value=certain)
+
+
+    def filter_results(self, image_file_list, pred_class_list, y_certainty):
         image_file_list_filter = []
         y_predictions_filter = []
+        y_certainty_filter =[]
         list_selected_classes = []
         for i in self.pred_stat_listbox.get_indexes():
             s = self.pred_stat_listbox.get_list_values()[i]
@@ -146,8 +153,9 @@ class Interface(object):
                 if j == self.class_dictionary[pred_class_list[i]]:
                     image_file_list_filter.append(image_file_list[i])
                     y_predictions_filter.append(pred_class_list[i])
+                    y_certainty_filter.append(y_certainty[i])
         self.file_listbox.update(values=image_file_list_filter)
-        return image_file_list_filter, y_predictions_filter
+        return image_file_list_filter, y_predictions_filter, y_certainty_filter
 
     def reset_predict_display(self):
         self.update_test_image(self.get_img_data(r'plots\fantom.png'))
@@ -160,6 +168,7 @@ class Interface(object):
         self.image_predic_class.update("")
         self.image_number.update('')
         self.image_file_name.update("")
+        self.predict_certainty.update('')
 
 
 
@@ -245,7 +254,7 @@ class Interface(object):
                                     [sg.Text("File number "), self.image_number, sg.Text("of "), self.file_number],
                                     [sg.Text("Predicted class: ")],
                                     [self.image_predic_class],
-                                    [sg.Text(' ')],
+                                    [sg.Text('Certainty: '), self.predict_certainty],
                                     [sg.Text("Dataset prediction details", font=("Helvetica", 15, 'bold'), size=(25, 1), justification='left')],
                                     [self.pred_stat_listbox],
                                     [sg.Button('Export details', size=(10, 2), key='Save as'),
@@ -288,7 +297,7 @@ class Interface(object):
         else:
             return self.input_directory
 
-    def save_pred_details(self,path, image_file_list, y_predictions):
+    def save_pred_details(self,path, image_file_list, y_predictions, y_certainty):
         file_name = sg.PopupGetFile('Enter Filename', save_as=True, default_path="results.txt",default_extension='txt')
         if not file_name:
             sg.popup("Please enter the file name")
@@ -319,7 +328,8 @@ class Interface(object):
             file.write("\n")
             file.write("\n")
             for i in range(len(image_file_list)):
-                file.write(image_file_list[i] + ": "+ self.class_dictionary[y_predictions[i]] )
+                certain = str(round(y_certainty[i], 3)) + "%"
+                file.write(image_file_list[i] + ": "+ self.class_dictionary[y_predictions[i]] + " " + certain )
                 file.write("\n")
 
             file.close()
