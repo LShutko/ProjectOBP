@@ -53,6 +53,9 @@ if __name__ == '__main__':
                         y_predictions_orig = y_probabilities.argmax(axis=1)
                         y_predictions = y_predictions_orig.copy()
 
+                        y_certainty_orig = 100*y_probabilities.max(axis=1)
+                        y_certainty = y_certainty_orig.copy()
+
                         m = [0]*15  #calculating the percentage for each predicted class in the dataset
                         for i in y_predictions:
                             m[i]+=1
@@ -64,7 +67,7 @@ if __name__ == '__main__':
                         test_data_loaded = True
                         path = input_directory+"/"+image_file_list[0]
                         gui.init_model_controls(image_file_list)  #set the slider, file name list
-                        gui.update_predict_display(input_directory, im_index,y_predictions[im_index]) #load first image and update file info display
+                        gui.update_predict_display(input_directory, im_index,y_predictions[im_index], y_certainty[im_index]) #load first image and update file info display
 
                     else:
                         gui.popup_note("No valid dataset directory provided! try again")
@@ -88,7 +91,7 @@ if __name__ == '__main__':
             if event == 'Save as':
                 if test_data_loaded:
                     func_to_call = gui.dispatch_dictionary[event]  # get function from dispatch dictionary
-                    func_to_call(input_directory, image_file_list, y_predictions)
+                    func_to_call(input_directory, image_file_list, y_predictions, y_certainty)
                 else:
                     gui.popup_note("Upload the data first!")
 
@@ -97,11 +100,12 @@ if __name__ == '__main__':
                 if test_data_loaded:
                     image_file_list = []
                     y_predictions = []
-                    image_file_list, y_predictions = gui.filter_results(image_file_list_orig, y_predictions_orig)
+                    y_certainty =[]
+                    image_file_list, y_predictions, y_certainty = gui.filter_results(image_file_list_orig, y_predictions_orig, y_certainty_orig)
                     im_index = 0
                     path = input_directory + "/" + image_file_list[0]
                     gui.init_model_controls(image_file_list)  # set the slider, file name list
-                    gui.update_predict_display(input_directory, im_index, y_predictions[im_index])
+                    gui.update_predict_display(input_directory, im_index, y_predictions[im_index],y_certainty[im_index])
                 else:
                     gui.popup_note("Upload the data first!")
 
@@ -131,7 +135,7 @@ if __name__ == '__main__':
                 gui.slider.update(value=im_index + 1)
 
             func_to_call = gui.predic_browsing[event]  # get function from dispatch dictionary
-            func_to_call(input_directory, im_index, y_predictions[im_index]) #call gui.update_predict_display function
+            func_to_call(input_directory, im_index, y_predictions[im_index], y_certainty[im_index]) #call gui.update_predict_display function
 
 
         elif event in gui.graph_refresh:
